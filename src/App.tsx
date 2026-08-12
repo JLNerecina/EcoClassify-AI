@@ -118,6 +118,19 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
 
+  // Global Keyboard Shortcuts for Esc to close Modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isWebcamOpen) setIsWebcamOpen(false);
+        if (isSettingsOpen) setIsSettingsOpen(false);
+        if (isHistoryOpen) setIsHistoryOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isWebcamOpen, isSettingsOpen, isHistoryOpen]);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
   }, [history]);

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Upload,
   Camera,
@@ -31,6 +31,27 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
   const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Global Keyboard Shortcut: Enter to classify
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if a modal is open or if user is typing in an input field
+      const hasOpenModal = document.querySelector('.fixed.inset-0.z-50') !== null;
+      if (
+        e.key === 'Enter' &&
+        selectedImage &&
+        !isLoading &&
+        !hasOpenModal &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        onClassify(selectedImage, selectedName);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, isLoading, selectedName, onClassify]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,7 +192,12 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Run AI Classification Report</span>
+                    <span className="flex items-center space-x-1.5">
+                      <span>Run AI Classification Report</span>
+                      <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-slate-950/20 border border-slate-950/20 font-mono font-medium">
+                        Enter
+                      </span>
+                    </span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </>
                 )}
