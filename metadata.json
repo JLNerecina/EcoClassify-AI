@@ -1,0 +1,6 @@
+{
+  "name": "Garbage Classification",
+  "description": "Upload or capture garbage images for automated AI classification, recycling reports, and waste management guidance powered by Roboflow serverless workflow.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020617"/><stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="bottle" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.4)"/>
+      <stop offset="30%" stop-color="rgba(186, 230, 253, 0.7)"/>
+      <stop offset="70%" stop-color="rgba(56, 189, 248, 0.5)"/>
+      <stop offset="100%" stop-color="rgba(3, 105, 161, 0.6)"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)" rx="24"/>
+  <ellipse cx="200" cy="355" rx="55" ry="12" fill="rgba(0,0,0,0.5)" filter="blur(6px)"/>
+  <!-- Cap -->
+  <rect x="180" y="60" width="40" height="20" rx="4" fill="#0284c7"/>
+  <!-- Neck -->
+  <rect x="185" y="80" width="30" height="30" fill="url(#bottle)"/>
+  <!-- Body -->
+  <path d="M 185 110 C 140 130 140 180 145 340 L 255 340 C 260 180 260 130 215 110 Z" fill="url(#bottle)" stroke="#7dd3fc" stroke-width="1.5"/>
+  <!-- Label -->
+  <rect x="144" y="200" width="112" height="60" fill="#0284c7" rx="4" opacity="0.85"/>
+  <text x="200" y="235" font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#ffffff" text-anchor="middle">PET PLASTIC</text>
+</svg>
