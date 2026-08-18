@@ -15,6 +15,7 @@ import {
   Clock,
   ShieldCheck,
   Zap,
+  FileText,
 } from 'lucide-react';
 import { ClassificationResult, GeminiReport } from '../types';
 
@@ -141,6 +142,26 @@ Eco Tip: ${gemini.eco_tip || 'Reduce single-use items.'}`;
     downloadAnchor.remove();
   };
 
+  const handleDownloadText = () => {
+    const textContent = `ECOCLASSIFY AI GARBAGE REPORT
+--------------------------------
+Item: ${gemini.item_name || imageName}
+Category: ${primaryCategory}
+Bin Recommendation: ${gemini.bin_color_recommendation || binStyle.binName}
+Disposal Steps:
+${gemini.step_by_step_disposal ? gemini.step_by_step_disposal.join('\n') : 'Follow municipal waste guidelines.'}
+Eco Tip: ${gemini.eco_tip || 'Reduce single-use items.'}`;
+
+    const dataStr =
+      'data:text/plain;charset=utf-8,' + encodeURIComponent(textContent);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `classification-report-${Date.now()}.txt`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Controls Bar */}
@@ -153,13 +174,21 @@ Eco Tip: ${gemini.eco_tip || 'Reduce single-use items.'}`;
           <span>Classify Another Item</span>
         </button>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleCopyReport}
             className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors border border-slate-700"
           >
             <Copy className="w-3.5 h-3.5 text-slate-400" />
             <span>{copied ? 'Copied!' : 'Copy Summary'}</span>
+          </button>
+
+          <button
+            onClick={handleDownloadText}
+            className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors border border-slate-700"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-400" />
+            <span>Export Text</span>
           </button>
 
           <button

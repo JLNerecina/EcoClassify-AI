@@ -60,9 +60,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleResetDefaults = () => {
-    setKeyInput('SlKaCj7rFJL077FH5LO5');
+    setKeyInput('YycCxhqZecCKEYYdtbnL');
     setUrlInput(
-      'https://serverless.roboflow.com/john-lian-r-nerecina/workflows/garbage-classification-3-vgarbage-classification-3-laeqp-1-rfdetr-small-t1-logic'
+      'https://serverless.roboflow.com/what-you-need-to-know/workflows/garbage-classification-model-v1-vgarbage-classification-model-v1-2-rfdetr-small-t1-logic'
     );
   };
 
@@ -102,7 +102,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-emerald-300 font-mono focus:outline-none focus:border-emerald-500"
-              placeholder="e.g. SlKaCj7rFJL077FH5LO5"
+              placeholder="e.g. YycCxhqZecCKEYYdtbnL"
               required
             />
           </div>

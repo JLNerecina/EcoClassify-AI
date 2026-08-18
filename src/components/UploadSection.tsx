@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   HelpCircle,
   Zap,
+  Activity,
 } from 'lucide-react';
 import { SAMPLE_GARBAGE_IMAGES } from '../data/samples';
 import { SampleGarbageImage } from '../types';
@@ -18,12 +19,14 @@ interface UploadSectionProps {
   onClassify: (imageDataUrlOrUrl: string, name?: string) => void;
   isLoading: boolean;
   onOpenWebcam: () => void;
+  onOpenRealtimeClassify: () => void;
 }
 
 export const UploadSection: React.FC<UploadSectionProps> = ({
   onClassify,
   isLoading,
   onOpenWebcam,
+  onOpenRealtimeClassify,
 }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<string>('Uploaded Garbage Image');
@@ -251,6 +254,14 @@ export const UploadSection: React.FC<UploadSectionProps> = ({
                 >
                   <Camera className="w-4 h-4 text-emerald-400" />
                   <span>Use Camera</span>
+                </button>
+
+                <button
+                  onClick={onOpenRealtimeClassify}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-400/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors border border-emerald-500/30 flex items-center space-x-1.5"
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>Live Classifier</span>
                 </button>
 
                 <button

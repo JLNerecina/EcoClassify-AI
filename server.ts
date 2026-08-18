@@ -13,10 +13,10 @@ const PORT = 3000;
 // Parse large JSON payloads for base64 image strings
 app.use(express.json({ limit: '25mb' }));
 
-const DEFAULT_ROBOFLOW_API_KEY = process.env.ROBOFLOW_API_KEY || 'SlKaCj7rFJL077FH5LO5';
+const DEFAULT_ROBOFLOW_API_KEY = process.env.ROBOFLOW_API_KEY || 'YycCxhqZecCKEYYdtbnL';
 const DEFAULT_ROBOFLOW_WORKFLOW_URL =
   process.env.ROBOFLOW_WORKFLOW_URL ||
-  'https://serverless.roboflow.com/john-lian-r-nerecina/workflows/garbage-classification-3-vgarbage-classification-3-laeqp-1-rfdetr-small-t1-logic';
+  'https://serverless.roboflow.com/what-you-need-to-know/workflows/garbage-classification-model-v1-vgarbage-classification-model-v1-2-rfdetr-small-t1-logic';
 
 // Helper: Recursively search Roboflow JSON response for prediction objects
 function extractPredictionsFromRoboflow(data: any): { class: string; confidence: number }[] {
@@ -44,6 +44,35 @@ function extractPredictionsFromRoboflow(data: any): { class: string; confidence:
       for (const key of Object.keys(obj)) {
         if (key !== 'image' && key !== 'rawResponse') {
           search(obj[key], depth + 1);
+        }
+      }
+    }
+  }
+
+  search(data);
+  return results;
+}
+
+// Helper: Extract rich bounding box predictions from Roboflow response
+function extractBoundingBoxesFromRoboflow(data: any): any[] {
+  if (!data) return [];
+  const results: any[] = [];
+
+  function search(obj: any, depth = 0) {
+    if (!obj || depth > 6) return;
+    if (Array.isArray(obj)) {
+      obj.forEach((item) => search(item, depth + 1));
+      return;
+    }
+    if (typeof obj === 'object') {
+      // Look for standard object detection schema
+      if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined && (obj.class || obj.class_name)) {
+        results.push(obj);
+      } else {
+        for (const key of Object.keys(obj)) {
+          if (key !== 'image' && key !== 'rawResponse') {
+            search(obj[key], depth + 1);
+          }
         }
       }
     }
@@ -268,6 +297,132 @@ function generateFallbackWasteReport(detectedClass?: string, imageName?: string)
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Import InferenceHTTPClient dynamically or statically. We can just use standard import.
+// Actually, it's already installed, so we can just require it or import it at the top of server.ts.
+// I will import it at the top level next. For now, let's just add it dynamically to not break things if it's missing, but it is in package.json.
+app.get('/api/turn-config', async (req, res) => {
+  try {
+    const { InferenceHTTPClient } = await import('@roboflow/inference-sdk');
+    const apiKeyToUse = (req.query.apiKey as string) || process.env.ROBOFLOW_API_KEY || DEFAULT_ROBOFLOW_API_KEY;
+    const client = InferenceHTTPClient.init({
+      apiKey: apiKeyToUse
+    });
+    const iceServers = await client.fetchTurnConfig();
+    res.json({ iceServers });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/init-webrtc', async (req, res) => {
+  try {
+    const { InferenceHTTPClient } = await import('@roboflow/inference-sdk');
+    const { offer, wrtcParams } = req.body;
+    
+    // Support passing API key from the frontend for prototyping, or fallback to environment default
+    const apiKeyToUse = (wrtcParams && wrtcParams.apiKey) || req.body.apiKey || process.env.ROBOFLOW_API_KEY || DEFAULT_ROBOFLOW_API_KEY;
+    
+    const client = InferenceHTTPClient.init({
+      apiKey: apiKeyToUse
+    });
+
+    const answer = await client.initializeWebrtcWorker({
+      offer,
+      workflowSpec: wrtcParams.workflowSpec,
+      workspaceName: wrtcParams.workspaceName,
+      workflowId: wrtcParams.workflowId,
+      config: {
+        imageInputName: wrtcParams.imageInputName,
+        streamOutputNames: wrtcParams.streamOutputNames,
+        dataOutputNames: wrtcParams.dataOutputNames,
+        threadPoolWorkers: wrtcParams.threadPoolWorkers,
+        workflowsParameters: wrtcParams.workflowsParameters,
+        iceServers: wrtcParams.iceServers,
+        processingTimeout: wrtcParams.processingTimeout,
+        requestedPlan: wrtcParams.requestedPlan,
+        requestedRegion: wrtcParams.requestedRegion
+      }
+    });
+    res.json(answer);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to initialize WebRTC.' });
+  }
+});
+
+// Classification proxy endpoint for real-time (bypasses Gemini for speed)
+app.post('/api/classify-live', async (req, res) => {
+  try {
+    const { image, apiKey, workflowUrl } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: 'Image URL or base64 data is required.' });
+    }
+
+    const targetApiKey = apiKey || DEFAULT_ROBOFLOW_API_KEY;
+    const targetWorkflowUrl = workflowUrl || DEFAULT_ROBOFLOW_WORKFLOW_URL;
+
+    let imageInputObject: { type: string; value: string };
+
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      imageInputObject = { type: 'url', value: image };
+    } else {
+      let base64Val = image;
+      if (image.includes('base64,')) {
+        base64Val = image.split('base64,')[1];
+      }
+      imageInputObject = { type: 'base64', value: base64Val };
+    }
+
+    const requestBody = {
+      api_key: targetApiKey,
+      inputs: {
+        image: imageInputObject,
+      },
+    };
+
+    let roboflowData: any = null;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const roboflowResponse = await fetch(targetWorkflowUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (roboflowResponse.ok) {
+      roboflowData = await roboflowResponse.json();
+    } else {
+      const errText = await roboflowResponse.text();
+      return res.status(roboflowResponse.status).json({ error: errText });
+    }
+
+    const extractedPredictions = extractBoundingBoxesFromRoboflow(roboflowData);
+    
+    // Always normalize the response into a structured format for the frontend
+    const normalizedData = {
+      predictions: extractedPredictions,
+      raw: roboflowData
+    };
+
+    return res.json({
+      success: true,
+      roboflow: normalizedData,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to process live image classification.',
+    });
+  }
 });
 
 // Classification proxy endpoint

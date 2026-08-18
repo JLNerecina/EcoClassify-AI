@@ -4,6 +4,7 @@ import { UploadSection } from './components/UploadSection';
 import { ResultReport } from './components/ResultReport';
 import { ImpactDashboard } from './components/ImpactDashboard';
 import { WebcamModal } from './components/WebcamModal';
+import { RealtimeWebcamModal } from './components/RealtimeWebcamModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HistoryModal } from './components/HistoryModal';
 import { ClassificationResult, HistoryItem } from './types';
@@ -13,9 +14,9 @@ const STORAGE_KEY_HISTORY = 'ecoclassify_history_v1';
 const STORAGE_KEY_API_KEY = 'ecoclassify_api_key_v1';
 const STORAGE_KEY_WORKFLOW_URL = 'ecoclassify_workflow_url_v1';
 
-const DEFAULT_KEY = 'SlKaCj7rFJL077FH5LO5';
+const DEFAULT_KEY = 'YycCxhqZecCKEYYdtbnL';
 const DEFAULT_URL =
-  'https://serverless.roboflow.com/john-lian-r-nerecina/workflows/garbage-classification-3-vgarbage-classification-3-laeqp-1-rfdetr-small-t1-logic';
+  'https://serverless.roboflow.com/what-you-need-to-know/workflows/garbage-classification-model-v1-vgarbage-classification-model-v1-2-rfdetr-small-t1-logic';
 
 const INITIAL_SEED_HISTORY: HistoryItem[] = [
   {
@@ -115,6 +116,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
+  const [isRealtimeOpen, setIsRealtimeOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
 
@@ -123,13 +125,14 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isWebcamOpen) setIsWebcamOpen(false);
+        if (isRealtimeOpen) setIsRealtimeOpen(false);
         if (isSettingsOpen) setIsSettingsOpen(false);
         if (isHistoryOpen) setIsHistoryOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isWebcamOpen, isSettingsOpen, isHistoryOpen]);
+  }, [isWebcamOpen, isRealtimeOpen, isSettingsOpen, isHistoryOpen]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
@@ -254,6 +257,7 @@ export default function App() {
             onClassify={handleClassify}
             isLoading={isLoading}
             onOpenWebcam={() => setIsWebcamOpen(true)}
+            onOpenRealtimeClassify={() => setIsRealtimeOpen(true)}
           />
         )}
 
@@ -298,6 +302,13 @@ export default function App() {
         isOpen={isWebcamOpen}
         onClose={() => setIsWebcamOpen(false)}
         onCapture={(dataUrl) => handleClassify(dataUrl, 'Webcam Captured Photo')}
+      />
+
+      <RealtimeWebcamModal
+        isOpen={isRealtimeOpen}
+        onClose={() => setIsRealtimeOpen(false)}
+        apiKey={apiKey}
+        workflowUrl={workflowUrl}
       />
 
       <SettingsModal
