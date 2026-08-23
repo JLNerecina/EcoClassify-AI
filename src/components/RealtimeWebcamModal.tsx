@@ -224,9 +224,31 @@ export const RealtimeWebcamModal: React.FC<RealtimeWebcamModalProps> = ({
               />
               
               {isClassifying && (
-                <div className="absolute top-3 left-3 flex items-center space-x-1.5 bg-rose-500/90 text-white px-2 py-1 rounded text-xs font-semibold tracking-wider">
+                <div className="absolute top-3 left-3 flex items-center space-x-1.5 bg-rose-500/90 text-white px-2 py-1 rounded text-xs font-semibold tracking-wider shadow-lg">
                    <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                    <span>LIVE SCAN</span>
+                </div>
+              )}
+
+              {isClassifying && predictions.length > 0 && (
+                <div className="absolute bottom-3 right-3 bg-slate-950/70 backdrop-blur-md border border-white/10 rounded-lg p-3 text-white min-w-[160px] max-w-[220px] shadow-xl">
+                  <div className="text-xs text-slate-300 mb-2 font-medium flex justify-between items-center">
+                    <span>Detected Items</span>
+                    <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-sm font-mono">{predictions.length}</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {predictions.slice(0, 4).map((p, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span className="truncate pr-2 capitalize text-slate-100">{p.class}</span>
+                        <span className="font-mono text-emerald-400">{(p.confidence * 100).toFixed(0)}%</span>
+                      </div>
+                    ))}
+                    {predictions.length > 4 && (
+                      <div className="text-[10px] text-slate-400 text-center pt-1.5 border-t border-white/5 mt-2">
+                        +{predictions.length - 4} more items
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
